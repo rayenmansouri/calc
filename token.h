@@ -1,15 +1,10 @@
-/*read input stream into token*/
 #include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
 #include <ctype.h>
+#include <stdlib.h>
+#include <string.h>
 #include <math.h>
 
-#define MAXTOK 		100
-#define MAXLEN		10  //max symbol length
-#define MAXDIGIT	100 //max number size
-
-/*token type */
+/*spec token type*/
 
 #define GREATER		1
 #define GEQUAL		2
@@ -22,153 +17,145 @@
 #define COS		9
 #define PLUSEQUAL	10
 #define MINUSEQUAL	11
+#define KEYWORD		12
 #define QUIT 		'q'
-#define PRINT 		';'
-
+#define PRINT		';'
 
 struct token{
 	int key;
-	char* val;
+	char val[256];
 };
 
-struct token tokbuf[MAXTOK];
+struct token tokens[1000];
+int ntok = 0;
 
-struct token keywords[] = {
-	{QUIT,"exit"},
-	{HELP,"help"},
-	{SINUS,"sin"},
-	{COS,"cos"}
-};
 
-int nkeys 	= sizeof(keywords) / sizeof(struct token);
-
-int ntok 	= 0; //token buff
-
-struct token *
-getkeyword(char *val)
+int getnum(char *s)
 {
-	int i;
-	for(i = 0; i < nkeys;i++){
-		if(strcmp(keywords[i].val,val) == 0)
-			return &keywords[i];
-	}
-	return NULL;
+	int ret;
+	double d;
+	ret = scanf("%lf",&d);
+	sprintf(s,"%f",d);
+	return ret;
 }
 
+int getop(char *s)
+{
+	int c,i;
+	while((c = getchar()) == ' ' || c == '\t')
+		;
+	if(!isdigit(c) && !isalpha(c))
+		return c;
+	ungetc(c,stdin);
+	if(isdigit(c)){
+		if(getnum(s))
+			return NUMBER;
+		else
+			exit(1);
+	}
+	i = 0;
+	for(;;){
+		if(!isalnum(s[i++] = getchar())){
+			ungetc(s[i-1],stdin);
+			s[i-1] = '\0';
+			return KEYWORD;
+		}
+	}
+}
 
 void pushback(struct token tok)
 {
-	tokbuf[ntok++] = tok;
+	tokens[ntok++] = tok;
 }
 
-struct token
-get_token(void)
+
+int getkeyword(char *s)
 {
-	if(ntok > 0)
-		return tokbuf[--ntok];
-	char w[MAXTOK];
-	struct token tok;
-	while((*w = getchar()) == ' ' || *w == '\t')
-		;
-	if(*w == EOF || *w  == QUIT){  
-	 	tok.key = QUIT;
-		return tok;
-	}
-	if(*w == '\n') {
-		tok.key = PRINT;
-		return tok;
-	}
-	if(isdigit(*w)){ 
-		int len;	
-		double d;
-		ungetc(*w,stdin);
-		scanf("%lf",&d);
-		sprintf(w,"%lf",d);
-		len = strlen(w);
-		if(len > MAXDIGIT){
-			fprintf(stderr,"very big number\n");
-			exit(1);
-		}
-		tok.val = (char *) malloc(len);	
-		strcpy(tok.val,w);
-		tok.key = NUMBER;
-		return tok;
-	}
-	switch(*w){
+	if(strcmp("exit",s) == 0)
+		return QUIT;
+	if(strcmp("HELP",s) == 0)
+		return HELP;
+	if(strcmp("cos",s) == 0)
+		return COS;
+	if(strcmp("sin",s) == 0)
+		return SINUS;
+	return SYM;
+}
+
+int get_special(int c)
+{
+	int c2;
+	if(c == EOF || c == QUIT)
+		return QUIT;
+	if(c == '\n')
+		return PRINT;
+	switch(c){
 		case '(':
 		case ')': 
 		case PRINT:
 		case '*':  
 		case '/':
 		case '^':
-			tok.key = *w;
-			break;
+			return c;
 		case '>':
-			switch(w[1] = getchar()){
+			switch(c2 = getchar()){
 				case '=':
-					tok.key = GEQUAL;
-				default:	
-					ungetc(w[1],stdin);
-					tok.key = GREATER;
+					return GEQUAL;
+				default:
+					ungetc(c2,stdin);
+					return GREATER;
 			}
 			break;
 		case '=':
-			switch(w[1] = getchar()){
+			switch(c2 = getchar()){
 				case '=':
-					tok.key = EQUAL;
+					return EQUAL;
 					break;
 				default:
-					ungetc(w[1],stdin);
-					tok.key = ASSIGN;
+					ungetc(c2,stdin);
+					return ASSIGN;
 			}
 			break;
 		case '+':
-			switch(w[1] = getchar()){
+			switch(c2 = getchar()){
 				case '=':
-					tok.key = PLUSEQUAL;
+					return PLUSEQUAL;
 					break;
 				default:
-					ungetc(w[1],stdin);
-					tok.key = '+';
+					ungetc(c2,stdin);
+					return '+';
 			}
 			break;
 		case '-':
-			switch(w[1] = getchar()){
+			switch(c2 = getchar()){
 				case '=':
-					tok.key = MINUSEQUAL;
-					break;
+					return MINUSEQUAL;
 				default:
-					ungetc(w[1],stdin);
-					tok.key = '-';
+					ungetc(c2,stdin);
+					return '-';
 			}
 			break;
-
-		default:	
-			if(isalpha(*w)){
-				tok.key = SYM;
-				int i;
-				for(i = 1;i < MAXLEN;i++)
-					if(!isalnum(w[i] = getchar())){
-						ungetc(w[i],stdin);
-						w[i] = '\0';
-						break;
-					}
-				if(i >= MAXLEN){
-					fprintf(stderr,"token too long\n");
-					exit(1);
-				}
-				tok.val = (char *) malloc(strlen(w));
-				strcpy(tok.val,w);
-				
-				struct token *t2;
-				if((t2 = getkeyword(tok.val)) != NULL){
-					tok.key = t2->key;
-				}	
-			}else{
-				fprintf(stderr,"unkown token %c\n",*w);
-				exit(1);
-			}
-		
+		default:
+			exit(1);
 	}
-	return tok;	
 }
+
+
+struct token get_token()
+{
+	if(ntok > 0)
+		return tokens[--ntok];
+	struct token ret;
+	ret.key = getop(ret.val);
+	if(ret.key == NUMBER)
+		return ret;
+	//get specefic
+	if(ret.key == KEYWORD)
+		ret.key = getkeyword(ret.val);
+	else
+		ret.key = get_special(ret.key);
+	return ret;
+}
+
+
+

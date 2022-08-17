@@ -31,6 +31,19 @@ int main(int argc,char *argv[])
 			case HELP:
 				usage();
 				break;
+			case COS:
+			{	
+				double d;
+				tok = get_token();
+				if(tok.key != '(')
+					die("'(' expected afer sinus\n");
+				d = expression();
+				tok = get_token();
+				if(tok.key != ')')
+					die("unbalanced parenthese\n");
+				printf("%f\n",cos(d));
+				break;	
+			}
 			case SYM:
 				struct token t2 = get_token();
 				if(t2.key == ASSIGN){	
@@ -78,7 +91,7 @@ void die(char *s,...)
 
 char *to_string(double d)
 {
-	char *w = (char *) malloc(MAXDIGIT);
+	char *w = (char *) malloc(255);
 	sprintf(w,"%f",d);
 	return w;
 }
