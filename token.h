@@ -3,14 +3,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-
 /*spec token type*/
 
 #define GREATER		1
 #define GEQUAL		2
 #define EQUAL		3
 #define ASSIGN 		4
-#define SINUS		5
+#define SIN		5
 #define NUMBER 		6
 #define SYM		7
 #define HELP		8
@@ -18,6 +17,8 @@
 #define PLUSEQUAL	10
 #define MINUSEQUAL	11
 #define KEYWORD		12
+#define LESS		13
+#define LESSEQUAL	14
 #define QUIT 		'q'
 #define PRINT		';'
 
@@ -29,7 +30,8 @@ struct token{
 struct token tokens[1000];
 int ntok = 0;
 
-
+struct token lookahead = {0,""};
+struct token lookback = {0,""};
 int getnum(char *s)
 {
 	int ret;
@@ -73,26 +75,27 @@ int getkeyword(char *s)
 {
 	if(strcmp("exit",s) == 0)
 		return QUIT;
-	if(strcmp("HELP",s) == 0)
+	if(strcmp("help",s) == 0)
 		return HELP;
 	if(strcmp("cos",s) == 0)
 		return COS;
 	if(strcmp("sin",s) == 0)
-		return SINUS;
+		return SIN;
+	if(strcmp("q",s) == 0)
+		return QUIT;
 	return SYM;
 }
 
 int get_special(int c)
 {
 	int c2;
-	if(c == EOF || c == QUIT)
+	if(c == EOF)
 		return QUIT;
 	if(c == '\n')
 		return PRINT;
 	switch(c){
 		case '(':
 		case ')': 
-		case PRINT:
 		case '*':  
 		case '/':
 		case '^':
@@ -106,6 +109,16 @@ int get_special(int c)
 					return GREATER;
 			}
 			break;
+		case '<':
+			switch(c2 = getchar()){
+				case '=':
+					return LESSEQUAL;
+				default:
+					ungetc(c2,stdin);
+					return LESS;
+			}
+			break;
+
 		case '=':
 			switch(c2 = getchar()){
 				case '=':
@@ -143,9 +156,11 @@ int get_special(int c)
 
 struct token get_token()
 {
-	if(ntok > 0)
-		return tokens[--ntok];
+		
 	struct token ret;
+	if(ntok > 0)
+		return tokens[--ntok];	
+	
 	ret.key = getop(ret.val);
 	if(ret.key == NUMBER)
 		return ret;
