@@ -52,10 +52,9 @@ char *to_string(double d)
 }
 
 /*calculator main loop*/
-
 void calc(void)
 {	
-	double exp;
+	double ret;
 	struct token tok;
 	for(;;){
 		printf("> ");
@@ -71,11 +70,11 @@ void calc(void)
 				break;
 			default:
 				pushback(tok);	
-				exp = stmt();
+				ret = stmt();
 				if(!error_sig)
-					printf("%f\n",exp);												
+			        	printf("%f\n",ret);
 				clean_up();
-		}	
+		}	                
 	}
 }
 
@@ -248,7 +247,7 @@ double primary(void)
 		case '-':
 			return -primary();
 		default:
-			error_sig = 1;
+ 			error_sig = 1;
 			sprintf(error_text,"syntax error %c\n",tok.key);
 			return 0;
 	}

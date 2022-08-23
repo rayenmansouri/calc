@@ -30,8 +30,6 @@ struct token{
 struct token tokens[1000];
 int ntok = 0;
 
-struct token lookahead = {0,""};
-struct token lookback = {0,""};
 int getnum(char *s)
 {
 	int ret;
