@@ -9,11 +9,11 @@
 #define GEQUAL		2
 #define EQUAL		3
 #define ASSIGN 		4
-#define SIN		5
+#define SIN			5
 #define NUMBER 		6
-#define SYM		7
+#define SYM			7
 #define HELP		8
-#define COS		9
+#define COS			9
 #define PLUSEQUAL	10
 #define MINUSEQUAL	11
 #define KEYWORD		12
@@ -48,10 +48,8 @@ int getop(char *s)
 		return c;
 	ungetc(c,stdin);
 	if(isdigit(c)){
-		if(getnum(s))
-			return NUMBER;
-		else
-			exit(1);
+		getnum(s);
+		return NUMBER;
 	}
 	i = 0;
 	for(;;){

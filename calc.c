@@ -93,12 +93,11 @@ void clean_up()
 double stmt(void)
 {
 	double exp;
-	struct token tok;
+	struct token tok, t2;
 	struct nlist *s;
 	tok = get_token();
 	switch(tok.key){
 		case SYM:
-			struct token t2;
 			t2 = get_token();
 			if(t2.key == ASSIGN || t2.key == PLUSEQUAL || t2.key == MINUSEQUAL)
 				return declaration(tok.val,t2.key);	
@@ -141,7 +140,7 @@ double declaration(char *id,int key)
 			die("fatal error\n");
 	
 	}
-
+	return 0;
 }
 
 
@@ -220,6 +219,7 @@ double term(void)
 double primary(void)
 {
 	struct token tok = get_token();
+	struct nlist *s;
 	double d;
 	switch(tok.key){
 		case '(':
@@ -234,7 +234,7 @@ double primary(void)
 		case NUMBER:
 			return atof(tok.val);
 		case SYM:
-			struct nlist *s;
+		
 			if((s = lookup(tok.val)) == NULL){
 				sprintf(error_text,"'%s' is not defined\n",tok.val);
 				error_sig = 1;
@@ -251,6 +251,7 @@ double primary(void)
 			sprintf(error_text,"syntax error %c\n",tok.key);
 			return 0;
 	}
+	return 0;
 }
 
 double builtin(int key)
