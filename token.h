@@ -19,6 +19,8 @@
 #define KEYWORD		12
 #define LESS		13
 #define LESSEQUAL	14
+#define LET			15
+#define IF			16
 #define QUIT 		'q'
 #define PRINT		';'
 
@@ -79,6 +81,15 @@ int getkeyword(char *s)
 		return SIN;
 	if(strcmp("q",s) == 0)
 		return QUIT;
+	if(strcmp("let",s) == 0)
+		return LET;
+	if(strcmp("LET",s) == 0)
+		return LET;
+	if(strcmp("IF",s) == 0)
+		return IF;
+	if(strcmp("if",s) == 0)
+		return IF;
+	
 	return SYM;
 }
 
@@ -95,7 +106,12 @@ int get_special(int c)
 		case '*':  
 		case '/':
 		case '^':
+		case '{':
+		case '}':
 			return c;
+		case '\n':
+		case ';':
+			return PRINT;
 		case '>':
 			switch(c2 = getchar()){
 				case '=':
@@ -125,6 +141,7 @@ int get_special(int c)
 					return ASSIGN;
 			}
 			break;
+
 		case '+':
 			switch(c2 = getchar()){
 				case '=':
@@ -144,6 +161,7 @@ int get_special(int c)
 					return '-';
 			}
 			break;
+
 		default:
 			exit(1);
 	}

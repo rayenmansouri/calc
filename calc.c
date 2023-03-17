@@ -9,7 +9,9 @@ void usage(void);
 void die(char *,...);
 void clean_up();
 void calc(void);
-double declaration(char *,int);
+double compound_stmt(void);
+double block(void);
+double declaration(void);
 double stmt(void);
 double builtin(int);
 double expression(void);
@@ -70,7 +72,7 @@ void calc(void)
 				break;
 			default:
 				pushback(tok);	
-				ret = stmt();
+				ret = compound_stmt();
 				if(!error_sig)
 			        	printf("%f\n",ret);
 				clean_up();
@@ -90,54 +92,112 @@ void clean_up()
 	error_text[0] = '\0';
 }
 
-double stmt(void)
+
+double compound_stmt(void)
 {
-	double exp;
-	struct token tok, t2;
-	struct nlist *s;
+	double ret,exp;
+	struct token tok;
 	tok = get_token();
 	switch(tok.key){
-		case SYM:
-			t2 = get_token();
-			if(t2.key == ASSIGN || t2.key == PLUSEQUAL || t2.key == MINUSEQUAL)
-				return declaration(tok.val,t2.key);	
-			
-			pushback(t2); /*fall back to expression*/
-		default:
-			pushback(tok);
+		case IF:
 			exp = expression();
 			if(error_sig)
 				return 0;
-			else
-				return exp;
-	}			
+			if(exp)
+				return block();
+		
+			return 0;
+		default:
+			pushback(tok);
+			return stmt();
+	}
 }
 
+double stmt(void)
+{
+	double exp;
+	struct token tok;
+	struct nlist *s;
+	tok = get_token();
+	switch(tok.key){
+		case LET: 
+			exp =  declaration();	
+			break;
+		default:
+			pushback(tok); /*fall back to expression*/
+			exp = expression();
+			break;
+	}	
+	if(error_sig)
+				return 0;
+	tok = get_token();
+	if(tok.key != PRINT){
+		sprintf(error_text,"new line is expected\n");
+		error_sig = 1;
+		return 0;
+	}
+	return exp;
+}
 
-double declaration(char *id,int key)
+double block(void)
+{
+	struct token tok;
+	double ret;
+	tok = get_token();
+	switch(tok.key){
+		case '{':
+			for(;;){
+				ret = compound_stmt();
+				if(error_sig)
+					return 0;
+				tok = get_token();
+				if(tok.key == '}')
+					break;
+				pushback(tok);
+			}
+			return ret;
+		default:
+			return compound_stmt();
+	}
+}
+
+double declaration()
 {
 	struct nlist *s;
+	struct token tok,tok2;
 	double exp;
-	exp = expression();
-	if(error_sig)
+	tok = get_token();
+	if(tok.key != SYM){
+		sprintf(error_text,"symbol is expected\n");
+		error_sig = 1;
 		return 0;
-	switch(key){
+	}
+	if((s = lookup(tok.val)) != NULL){
+		sprintf(error_text,"already declared\n");
+		error_sig = 1;
+		return 0;
+	}
+	tok2 = get_token();
+	exp = expression();
+	switch(tok2.key){
 		case ASSIGN:
-			install(id,to_string(exp));
+			install(tok.val,to_string(exp));
 			return exp;
 		case PLUSEQUAL:
 		case MINUSEQUAL:
-			if((s = lookup(id)) == NULL){
+			if((s = lookup(tok.val)) == NULL){
 				error_sig = 1;
-				sprintf(error_text,"id: '%s' is undefined\n",id);
+				sprintf(error_text,"id: '%s' is undefined\n",tok.val);
 				return 0;
 			}
-			exp = key == PLUSEQUAL ? exp + atof(s->defn) : atof(s->defn) - exp;
-			install(id,to_string(exp));
+			exp = tok2.key == PLUSEQUAL ? exp + atof(s->defn) : atof(s->defn) - exp;
+			install(tok.val,to_string(exp));
 			return exp;
 		default:
 			/**/
-			die("fatal error\n");
+			sprintf(error_text,"'%s' is not an assignment operator",tok2.val);
+			error_sig = 1;
+			return 0;
 	
 	}
 	return 0;
@@ -234,7 +294,6 @@ double primary(void)
 		case NUMBER:
 			return atof(tok.val);
 		case SYM:
-		
 			if((s = lookup(tok.val)) == NULL){
 				sprintf(error_text,"'%s' is not defined\n",tok.val);
 				error_sig = 1;
@@ -246,10 +305,15 @@ double primary(void)
 			return builtin(tok.key);
 		case '-':
 			return -primary();
-		default:
- 			error_sig = 1;
-			sprintf(error_text,"syntax error %c\n",tok.key);
+		case '{':
+		case PRINT:
+			pushback(tok);
 			return 0;
+		default:
+			sprintf(error_text,"invalid syntax");
+			error_sig = 1;
+			return 0;
+			
 	}
 	return 0;
 }
@@ -276,5 +340,3 @@ double builtin(int key)
 			return 0;
 	}					
 }
-
-
