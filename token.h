@@ -21,6 +21,8 @@
 #define LESSEQUAL	14
 #define LET			15
 #define IF			16
+#define SQR			17
+#define SQRT			18
 #define QUIT 		'q'
 #define PRINT		';'
 
@@ -77,6 +79,10 @@ int getkeyword(char *s)
 		return HELP;
 	if(strcmp("cos",s) == 0)
 		return COS;
+	if(strcmp("sqrt",s) == 0)
+		return SQRT;
+	if(strcmp("sqr",s) == 0)
+		return SQR;
 	if(strcmp("sin",s) == 0)
 		return SIN;
 	if(strcmp("q",s) == 0)

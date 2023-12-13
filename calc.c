@@ -302,6 +302,8 @@ double primary(void)
 			return atof(s->defn);
 		case COS:
 		case SIN:
+		case SQRT:
+		case SQR:
 			return builtin(tok.key);
 		case '-':
 			return -primary();
@@ -325,6 +327,8 @@ double builtin(int key)
 	switch(key){
 		case COS:	
 		case SIN:
+		case SQRT:
+		case SQR:
 			tok = get_token();
 			if(tok.key != '(')
 				die("'(' expected afer sinus\n");
@@ -334,7 +338,17 @@ double builtin(int key)
 			tok = get_token();
 			if(tok.key != ')')
 				die("unbalanced parenthese\n");
-			return key == COS ? cos(d) : sin(d);
+			switch(key){
+				case COS:
+					return cos(d);
+				case SIN:
+					return sin(d);
+				case SQRT:
+					return sqrt(d);
+				default:
+					return d*d;
+				
+			}
 		default:
 			error_sig = 1;
 			return 0;
