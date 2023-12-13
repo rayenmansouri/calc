@@ -300,11 +300,6 @@ double primary(void)
 				return 0;
 			}
 			return atof(s->defn);
-		case COS:
-		case SIN:
-		case SQRT:
-		case SQR:
-			return builtin(tok.key);
 		case '-':
 			return -primary();
 		case '{':
@@ -312,6 +307,8 @@ double primary(void)
 			pushback(tok);
 			return 0;
 		default:
+			if(IS_BUILT_IN(tok.key))
+				return builtin(tok.key);
 			sprintf(error_text,"invalid syntax");
 			error_sig = 1;
 			return 0;

@@ -9,22 +9,29 @@
 #define GEQUAL		2
 #define EQUAL		3
 #define ASSIGN 		4
-#define SIN			5
 #define NUMBER 		6
-#define SYM			7
+#define SYM		7
 #define HELP		8
-#define COS			9
 #define PLUSEQUAL	10
 #define MINUSEQUAL	11
 #define KEYWORD		12
 #define LESS		13
 #define LESSEQUAL	14
-#define LET			15
-#define IF			16
-#define SQR			17
-#define SQRT			18
+#define LET		15
+#define IF		16
 #define QUIT 		'q'
 #define PRINT		';'
+
+/*260 < builtin token < 300*/
+
+#define COS 	260
+#define SIN	261
+#define SQR	262
+#define SQRT	263
+
+
+#define IS_BUILT_IN(x) ((x) >= 260 && (x) <= 300)
+
 
 struct token{
 	int key;
