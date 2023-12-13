@@ -327,14 +327,20 @@ double builtin(int key)
 		case SQRT:
 		case SQR:
 			tok = get_token();
-			if(tok.key != '(')
-				die("'(' expected afer sinus\n");
+			if(tok.key != '('){
+				error_sig = 1;
+				sprintf(error_text,"expected ( after builtin fn");
+				return 0;
+			}
 			d = expression();
 			if(error_sig)
 				return 0;
 			tok = get_token();
-			if(tok.key != ')')
-				die("unbalanced parenthese\n");
+			if(tok.key != ')'){
+				sprintf(error_text,"unbalanced parens");
+				error_sig = 1;
+				return 0;
+			}
 			switch(key){
 				case COS:
 					return cos(d);
